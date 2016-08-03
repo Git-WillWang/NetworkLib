@@ -2,12 +2,12 @@
 
 InternalPackageManager::InternalPackageManager() {
 	while (!pool.empty()) pool.pop();
-	for (int s = 0; s < DEFAULT_PACKAGE_NUM; ++s)
+	for (int s = 0; s < DEFAULT_INTERNAL_PACKAGE_NUM; ++s)
 		pool.push(new InternalPackage());
-	size = DEFAULT_PACKAGE_NUM;
+	size = DEFAULT_INTERNAL_PACKAGE_NUM;
 }
 InternalPackageManager::InternalPackageManager(int num) {
-	if (num <= 0) num = DEFAULT_PACKAGE_NUM;
+	if (num <= 0) num = DEFAULT_INTERNAL_PACKAGE_NUM;
 	while (!pool.empty()) pool.pop();
 	for (int s = 0; s < num; ++s)
 		pool.push(new InternalPackage());
@@ -38,10 +38,10 @@ InternalPackage* InternalPackageManager::getInstance() {
 }
 
 bool InternalPackageManager::extend(int num) {
-	if (num <= 0 || size>=MAX_PACKAGE_NUM)
+	if (num <= 0 || size>=MAX_INTERNAL_PACKAGE_NUM)
 		return false;
-	if (size + num >= MAX_PACKAGE_NUM)
-		num = MAX_PACKAGE_NUM - size;
+	if (size + num >= MAX_INTERNAL_PACKAGE_NUM)
+		num = MAX_INTERNAL_PACKAGE_NUM - size;
 	for (int s = 0; s < num; ++s)
 		pool.push(new InternalPackage());
 	return true;

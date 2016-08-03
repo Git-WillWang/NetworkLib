@@ -23,13 +23,12 @@ public:
     unsigned long ip;
 	unsigned short port;
 };
-
-class Package {
-	ConnID connID;
-	unsigned long dataLength;
-	unsigned char* data;
-};
-
+//连接建立确认包
+class ConnAcceptPackage{
+    unsigned char PackageId;
+    ConnID connId;
+    unsigned long sessionId;
+}
 //! 包的优先级
 enum PackagePriority
 {

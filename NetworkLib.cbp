@@ -39,6 +39,8 @@
 		<Unit filename="NetworkLayer.cpp" />
 		<Unit filename="NetworkLayer.h" />
 		<Unit filename="NetworkLibType.h" />
+		<Unit filename="PackageManager.cpp" />
+		<Unit filename="PackageManager.h" />
 		<Unit filename="Socket.h" />
 		<Unit filename="UDPSocket.cpp" />
 		<Unit filename="UDPSocket.h" />

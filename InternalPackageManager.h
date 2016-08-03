@@ -1,8 +1,8 @@
 #pragma once
 #ifndef INTERNALPACKAGEMANAGER_H
 #define INTERNALPACKAGEMANAGER_H
-#define DEFAULT_PACKAGE_NUM 100
-#define MAX_PACKAGE_NUM 1000
+#define DEFAULT_INTERNAL_PACKAGE_NUM 100
+#define MAX_INTERNAL_PACKAGE_NUM 1000
 #include<queue>
 #include "NetworkLibType.h"
 using namespace std;
