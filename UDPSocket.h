@@ -32,9 +32,12 @@ namespace NetworkLib {
 		bool needToSend();
 		void generateFrame(BitStream* output, int MTUSizeb, bool& isReliablePackageSent);
 		void writeToBitStream(BitStream* b, const InternalPackage* const p);
-		void splitPackage(InternalPackage* p, int MTUSize);
-		bool send(BitStream* b, PackagePriority priority, PackageReliability reliability, unsigned char streamIndex,int MTUSize);
+		void splitPackage(InternalPackage* p);
+		bool send(BitStream* b, PackagePriority priority, PackageReliability reliability, unsigned char streamIndex);
 		void sendBitStream(SOCKET s,ConnID connId,BitStream* b);
+		void setMTU(const unsigned int size);
+		unsigned int getMTU();
+        void setLostPackageResendDelay(unsigned int i);
 	private:
 		class ResendQueue {
 		public:
@@ -90,11 +93,11 @@ namespace NetworkLib {
 			map<unsigned short, InternalPackage*>* Queue;
 			map<time_t, list<unsigned short>*>* TimeIdMap;
 		};
-		unsigned short packageId;
+
 		unsigned int timeout;
 		unsigned int maxPackagePerSec;
 		unsigned int numOfAskConfirm;
-		unsigned int numOfRecPackage;
+		unsigned int numOfRecvPackage;
 		unsigned int numOfOrderedStream;
 		unsigned int maxNumOfPackageKeep;
 		unsigned int windowSize;
@@ -102,28 +105,30 @@ namespace NetworkLib {
 		unsigned int numOfPackageSent;
 		unsigned int bitStreamSent;
 		unsigned int resendPackageSent;
-		unsigned int lostPackageResentDelay;
-		unsigned int MTUSize;
+		unsigned int lostPackageResendDelay;
+		unsigned int MTUSize;//最大传输单元
+		unsigned int maxPackageSize;//包最大字节数
 		bool isLostConnect;
 		BitStream* dataStream;
 		time_t lastWinSizeChangeTime;//最近一次窗口调整时间
-		time_t lastRecTime;//
-		time_t lastAskTime;
+		time_t lastRecvTime;//最近一次接收包的时间
+		time_t lastAskTime;//最近一次接收确认包的时间
 		time_t lastSendTime;
 		unsigned int bytesRec;
 		unsigned int MAX_AVERAGE_PACKAGE_SEND_PER_SECOND;
 		unsigned int MAX_RECEIVE_PACKAGE_NUM;
 		unsigned int lastSecondSendCount;
+        unsigned short packageId;
 		unsigned int splitId;
-		queue<InternalPackage*> output;
-		queue<InternalPackage*> askConfirmQueue;
+		queue<InternalPackage*> output;//输出队列
+		queue<InternalPackage*> askConfirmQueue;//发送确认包队列
 		vector<unsigned short> waitingSequencedPackage;
 		vector<unsigned short> waitingOrderdPackage;
 		map<unsigned char, InternalPackage*>* orderedPackageArray[MAX_ORDER_SIZE] = { NULL };
-		vector<time_t> recTime;
+		vector<time_t> recvTime;
 		map<unsigned short, vector<InternalPackage*>> splitPackageMap;
-		ResendQueue resendQueue;
-		queue<InternalPackage*>* sendQueue[4];
+		ResendQueue resendQueue;//重发队列
+		queue<InternalPackage*>* sendQueue[4];//发送队列
 		InternalPackageManager* internalPackageManager;
 		enum {
 

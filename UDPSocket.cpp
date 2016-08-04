@@ -20,7 +20,7 @@ void UDPSocket::free() {
 
 }
 
-bool UDPSocket::send(BitStream* b, PackagePriority priority, PackageReliability reliability, unsigned char streamIndex, int MTUSize) {
+bool UDPSocket::send(BitStream* b, PackagePriority priority, PackageReliability reliability, unsigned char streamIndex) {
 	if (b->getBitsUsed() == 0)
 		return false;
 	time_t now;
@@ -49,8 +49,8 @@ bool UDPSocket::send(BitStream* b, PackagePriority priority, PackageReliability 
 	p->priority = priority;
 	p->reliability = reliability;
 	//包结构：UDP_HEADER-PACKAGE_HEADER-DATA
-	const int maxDataSize = MTUSize - UDP_HEADER_SIZE - p->getHeaderLength();
-	bool split = b->getBitsUsed() > maxDataSize;
+	unsigned int maxDataSize = maxPackageSize - BITS_TO_BYTES(p->getHeaderLength());
+	bool split = BITS_TO_BYTES(p->dataBitLength) > maxDataSize;
 	if (split) {
 		if (p->reliability == UNRELIABLE)
 			p->reliability = RELIABLE;
@@ -66,14 +66,14 @@ bool UDPSocket::send(BitStream* b, PackagePriority priority, PackageReliability 
 		p->orderIndex = waitingOrderdPackage[streamIndex]++;
 	}
 	if (split) {
-		splitPackage(p,MTUSize);
+		splitPackage(p);
 		return true;
 	}
 	sendQueue[p->priority]->push(p);
 }
-void UDPSocket::splitPackage(InternalPackage* p, int MTUSize) {
+void UDPSocket::splitPackage(InternalPackage* p) {
 	unsigned int headerByteLength = BITS_TO_BYTES(p->getHeaderLength());
-	unsigned int maxDataSize = MTUSize - UDP_HEADER_SIZE-headerByteLength;
+	unsigned int maxDataSize = maxPackageSize-headerByteLength;
 	unsigned int dataByteLength = BITS_TO_BYTES(p->dataBitLength);
 	p->splitCount = (unsigned short)((dataByteLength-1) / maxDataSize+1);
 	InternalPackage** splitArray = new InternalPackage*[p->splitCount];
@@ -179,12 +179,12 @@ InternalPackage* UDPSocket::createInternalPackage(BitStream* b) {
 	return p;
 }
 //处理接收数据
-void UDPSocket::handleRecData(unsigned char* buffer, int length) {
+void UDPSocket::handleRecvData(unsigned char* buffer, int length) {
 	if (length <= 1||!buffer)
 		return;
 	BitStream socketData(buffer, length,false);
-	time(&lastRecTime);
-	bytesRec += length + UDP_HEADER_SIZE;
+	time(&lastRecvTime);
+	bytesRecv += length + UDP_HEADER_SIZE;
 	InternalPackage* p = createInternalPackage(&socketData);
 	while (p) {
 		if (p->isAskConfirm) {
@@ -192,12 +192,12 @@ void UDPSocket::handleRecData(unsigned char* buffer, int length) {
 			if (resendQueue.empty())
 				lastAskTime = 0;
 			else {
-				lastAskTime = lastRecTime;
+				lastAskTime = lastRecvTime;
 			}
 			resendQueue.erase(p);
 		}
 		else {
-			++numOfRecPackage;
+			++numOfRecvPackage;
 			if ((p->reliability == RELIABLE_SEQUENCED) ||
 				(p->reliability == RELIABLE_ORDERED) ||
 				(p->reliability == RELIABLE))
@@ -206,13 +206,13 @@ void UDPSocket::handleRecData(unsigned char* buffer, int length) {
 				internalPackageManager->realease(p,true);
 				return;
 			}
-			if (recTime[p->id] > (lastRecTime - timeout) || p->orderIndex >= numOfOrderedStream) {
+			if (recvTime[p->id] > (lastRecvTime - timeout) || p->orderIndex >= numOfOrderedStream) {
 				internalPackageManager->realease(p,true);
 			}
 			else {
-				recTime[p->id] = lastRecTime;
+				recvTime[p->id] = lastRecvTime;
 				if ((p->reliability == RELIABLE_SEQUENCED || p->reliability == UNRELIABLE_SEQUENCED)) {
-					if (p->id < waitingSequencedPackage[p->streamIndex]) {
+					if (p->orderIndex < waitingSequencedPackage[p->streamIndex]) {
 						if (p->splitCount > 0) {
 							p = buildPackageFromSplitPackageMap(p->id);
 							if (p) {
@@ -234,7 +234,7 @@ void UDPSocket::handleRecData(unsigned char* buffer, int length) {
 						internalPackageManager->realease(p,true);
 					}
 				}
-				else if (p->reliability != RELIABLE_ORDERED) {
+				else if (p->reliability == RELIABLE_ORDERED) {
 					if (p->splitCount > 0)
 						p = buildPackageFromSplitPackageMap(p->id);
 					if (p) {
@@ -409,4 +409,21 @@ void UDPSocket::writeToBitStream(BitStream* b, const InternalPackage* const p) {
 	unsigned short length = p->dataBitLength;
 	b->write(htons(p->dataBitLength));
 	b->writeBits(p->data, p->dataBitLength, true);
+}
+void UDPSocket::setMTU(const unsigned int size){
+    if(size >= MAXIMUM_MTU_SIZE)
+        MTUSize = MAXIMUM_MTU_SIZE;
+    else MTUSize = size;
+    maxPackageSize = MTUSize - UDP_HEADER_SIZE;
+}
+unsigned int UDPSocket::getMTU(){
+    return MTUsize;
+}
+void UDPSocket::sendConfirmPackage(unsigned int id){
+    InternalPackage* p = InternalPackageManager.getInstance();
+    p->id = id;
+    p->isAskConfirm = true;
+    time(&p->createTime);
+    p->nextActTime = p->createTime + lostPackageResendDelay/4;
+    askConfirmQueue.push(p);
 }
