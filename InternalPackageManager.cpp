@@ -22,7 +22,7 @@ InternalPackageManager::~InternalPackageManager() {
 	}
 }
 
-void InternalPackageManager::realease(InternalPackage* package,bool canFree) {
+void InternalPackageManager::release(InternalPackage* package,bool canFree) {
 	if (package) {
 		if (canFree)
 			delete[] package;

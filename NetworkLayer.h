@@ -3,12 +3,12 @@
 #define NETWORKLAYER_H
 #include "BitStream.h"
 #include "NetworkLibType.h"
-#include "UDPSocket.h"
+#include "TDP.h"
 #include <thread>
 #include <sys/types.h>
 class Pipe {
 	ConnID connId;
-	UDPSocket transfer;
+	TDP tdp;
 	bool weInitiatedTheConnection;
     PingAndClockDifferential pingAndClockDifferential[PING_TIMES_ARRAY_SIZE];
 	int pingAndClockDifferentialWriteIndex;
@@ -18,6 +18,7 @@ class Pipe {
 	time_t connTime;
 };
 #define CONNECTION_REQUEST 0x00
+const ConnID UNASSIGNED_CONNID = {0xFFFFFFFF,0xFFFF};
 class NetworkLayer {
 public:
 	NetworkLayer();
@@ -46,7 +47,7 @@ public:
 	//! 初始化网络层
 	bool initialize(unsigned short maxNumOfPipes, unsigned short localPort, bool useAnyPort = false, bool onlyLocal = false, int timeout = 10000, int maxPacketsPerSecond = 400);
 	//! 得到通道的最大数量
-	unsigned short GetMaximumNumberOfPeers(void) const { return maximumNumberOfPeers; }
+	unsigned short getMaxNumOfPipes(void) const { return maximumNumberOfPeers; }
 	//! 设置允许连接的最大数量
 	void SetMaximumIncomingConnections(unsigned short numberAllowed) { maximumIncomingConnections = numberAllowed; }
 	//! 取得连接的最大数量
@@ -103,17 +104,17 @@ private:
 	//! 最大连接数量
 	unsigned short maxNumOfConnections;
 	//! 线程是否停止
-	bool threadsStop;
+	bool allThreadsStop;
 	//! 主循环线程是否已经启动
 	bool isMainLoopThreadActive;
 	//!	接收线程是否启动
-	bool isRecThreadActive;
+	bool isRecvThreadActive;
 	//! 发送的数据量
 	unsigned long bytesSent;
 	//! 接受的数据量
 	unsigned long bytesRecieved;
 	//! 包大小
 	int MTUSize;
-	queue<Package*> RecQueue;
+	queue<Package*> RecvQueue;
 };
 #endif // !NETWORKLAYER_H

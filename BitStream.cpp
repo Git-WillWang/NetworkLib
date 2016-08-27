@@ -316,3 +316,7 @@ void BitStream::print(const T* t) {
 	}
 	putchar('\n');
 }
+void BitStream::reset(){
+    memset(data,0,BITS_TO_BYTES(bitsUsed));
+    readOffset = bitsUsed = 0;
+}

@@ -30,6 +30,7 @@ public:
 	unsigned char* getData();
 	bool readBits(unsigned char*, const int, bool);
 	void writeBits(const unsigned char*, int, bool);
+	void reset();
 
 private:
 

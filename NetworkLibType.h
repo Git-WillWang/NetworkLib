@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __NETWORKLIBTYPE_H
-#define __NETWORKLIBTYPE_H
+#ifndef NETWORKLIBTYPE_H
+#define NETWORKLIBTYPE_H
 
 class ConnID {
 public:

@@ -5,6 +5,7 @@
 #include<arpa/inet.h>
 #include "NetworkLibType.h"
 #define INVALD_SOCKET -1
+#define SOCKET_ERROR -1
 class Socket {
 public:
 	Socket();

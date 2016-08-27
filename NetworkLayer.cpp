@@ -2,9 +2,11 @@
 NetworkLayer::NetworkLayer() {
 	maxNumOfPipes = 0;
 	maxNumOfConnections = 0;
+	listenSocket = INVALD_SOCKET;
 	pipeList = NULL;
 	isMainLoopThreadActive = false;
-	isRecThreadActive = false;
+	isRecvThreadActive = false;
+	allThreadsStop = true;
 	MTUSize = DEFAULT_MTU_SIZE;
 }
 
@@ -13,22 +15,23 @@ bool NetworkLayer::initialize(unsigned short maxNumOfPipes, unsigned short local
 		if ((listenSocket = Socket::getInstance()->createListenSocket(localPort, useAnyPort, onlyLocal)) == INVALID_SOCKET)
 			return false;
 	}
-	if(maxNumOfPipes==0){
+	if(this->maxNumOfPipes==0){
 		pipeList = new Pipe[maxNumOfPipes];
 		for (int i = 0; i < maxNumOfPipes; ++i) {
-			pipeList[i].reliabilityLayer->initLog(timeout, maxPackagesPerSec);
-			pipeList[i].id = UNASSIGNED_ID;
+			pipeList[i].tdp->initLog(timeout, maxPackagesPerSec);
+			pipeList[i].connId = UNASSIGNED_CONNID;
 		}
 		this->maxNumOfPipes = maxNumOfPipes;
 		if (maxNumOfConnections > maxNumOfPipes)
 			maxNumOfConnections = maxNumOfPipes;
 	}
-	if (threadsStop) {
+	if (allThreadsStop) {
 		bytesSents = 0;
 		bytesRecieved = 0;
-		threadsStop = false;
-		id->port = localPort;
-		id->ip = inet_addr();
+		allThreadsStop = false;
+        Socket::getInstance().getHostIp()
+		connId.port = localPort;
+		connId.ip = inet_addr();
 		pthread_t processPackageThread = NULL;
 		pthread_t recThread = NULL;
 		pthread_attr_t attr;
@@ -63,7 +66,7 @@ void NetworkLayer::disconnect(){
     for(int s=0;s<maxNumOfPipes;++s){
         unsigned char c  = DISCONNECT_NOTIFICATION;
         send((char*)&c,sizeof(c),HIGH_PRIORITY,UNRELIABLE,0,target);
-        pipeList[i].transfer.mainLoop(listenSocket,target,MTUSize);
+        pipeList[i].transfer.mainLoop(listenSocket,target);
         pipeList[i].connId = UNASSIGNED_CONNECT_ID;
         pipeList[i].transfer.reset();
     }

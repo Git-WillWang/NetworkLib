@@ -15,7 +15,7 @@ public:
     PackageManager();
     PackageManager(int size);
     ~PackageManager(){}
-    void realease(Package*,bool);
+    void release(Package*,bool);
 	static Package* getInstance();
 	bool extend(int num);
 private:

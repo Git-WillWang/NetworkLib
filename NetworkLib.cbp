@@ -41,11 +41,11 @@
 		<Unit filename="NetworkLibType.h" />
 		<Unit filename="PackageManager.cpp" />
 		<Unit filename="PackageManager.h" />
+		<Unit filename="Socket.cpp" />
 		<Unit filename="Socket.h" />
-		<Unit filename="UDPSocket.cpp" />
-		<Unit filename="UDPSocket.h" />
+		<Unit filename="TDP.cpp" />
+		<Unit filename="TDP.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="socket.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
